@@ -23,11 +23,11 @@ async def init():
         return print(
             f"Error: {e}"
         )
-    print("VenomX Now Started !!")
+    print("Userbot Now Started !!")
     await pyrogram.idle()
 
 
 if __name__ == "__main__":
     loop.run_until_complete(init())
-    print("VenomX Now Stopped !!")
+    print("Userbot is Now Stopped !!")
 
