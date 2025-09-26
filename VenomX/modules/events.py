@@ -48,9 +48,8 @@ async def call_decorators():
         except:
             return
 
-    # Register the stream end handler
-    @call.on_stream_end()
-    async def stream_end_handler(client, update: StreamEnded):
+    # Register the stream end handler using v2 syntax
+    async def stream_end_handler(update: StreamEnded):
         chat_id = update.chat_id
         await queues.task_done(chat_id)
         queue_empty = await queues.is_queue_empty(chat_id)
@@ -65,3 +64,5 @@ async def call_decorators():
         stream = await get_media_stream(media, type)
         await call.change_stream(chat_id, stream)
         await app.send_message(chat_id, "Streaming ...")
+
+    call.add_listener(stream_end_handler, StreamEnded)
