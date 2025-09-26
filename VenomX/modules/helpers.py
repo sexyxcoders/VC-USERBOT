@@ -4,9 +4,11 @@ import yt_dlp
 import ssl
 import certifi
 
-# Ensure Python/yt-dlp uses updated root CA certificates
-ssl._create_default_https_context = ssl.create_default_context
-ssl._create_default_https_context().load_verify_locations(certifi.where())
+# Ensure root CA certificates are used (fix Heroku SSL issues)
+ssl._create_default_https_context = lambda: ssl.create_default_context(cafile=certifi.where())
+
+# Make sure downloads folder exists
+os.makedirs("downloads", exist_ok=True)
 
 async def download_media_file(link: str, type: str):
     loop = asyncio.get_running_loop()
@@ -31,15 +33,15 @@ async def download_media_file(link: str, type: str):
             "cookiefile": "cookies.txt",
         }
 
-    x = yt_dlp.YoutubeDL(ydl_opts)
+    ydl = yt_dlp.YoutubeDL(ydl_opts)
 
-    # Extract info synchronously first
-    info = await loop.run_in_executor(None, x.extract_info, link, False)
-    file = os.path.join("downloads", f"{info['id']}.{info['ext']}")
+    # Extract video info in executor
+    info = await loop.run_in_executor(None, lambda: ydl.extract_info(link, download=False))
+    file_path = os.path.join("downloads", f"{info['id']}.{info['ext']}")
 
-    if os.path.exists(file):
-        return file
+    if os.path.exists(file_path):
+        return file_path
 
-    # Download in executor
-    await loop.run_in_executor(None, x.download, [link])
-    return file
+    # Download the media
+    await loop.run_in_executor(None, lambda: ydl.download([link]))
+    return file_path
