@@ -34,7 +34,6 @@ async def eor(message: Message, *args, **kwargs) -> Message:
 
 
 async def call_decorators():
-    @call.on_kicked()
     @call.on_closed_voice_chat()
     @call.on_left()
     async def stream_services_handler(client, chat_id: int):
@@ -45,7 +44,6 @@ async def call_decorators():
             return await call.leave_group_call(chat_id)
         except:
             return
-
 
     @call.on_stream_end()
     async def stream_end_handler_(client, update: Update):
@@ -65,4 +63,3 @@ async def call_decorators():
         stream = await get_media_stream(media, type)
         await call.change_stream(chat_id, stream)
         return await app.send_message("Streaming ...")
-
