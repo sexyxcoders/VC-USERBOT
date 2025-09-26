@@ -2,9 +2,8 @@ from VenomX import app, call, cdz, eor
 from VenomX import add_to_queue, get_from_queue, get_media_stream
 from VenomX import clear_queue, is_queue_empty, task_done
 from pyrogram import filters
-from pytgcalls.exceptions import AlreadyJoinedError  # Removed GroupCallNotFound
 
-
+# Pause stream
 @app.on_message(cdz(["pse", "pause", "vpse", "vpause"]) & ~filters.private)
 async def pause_stream(client, message):
     if message.sender_chat:
@@ -19,12 +18,10 @@ async def pause_stream(client, message):
             return await eor(message, "**Already Paused!**")
         elif a.status == "not_playing":
             return await eor(message, "**Nothing Streaming!**")
-    except AlreadyJoinedError:
-        return await eor(message, "**Assistant Already in VC!**")
     except Exception:
-        return await eor(message, "**I am Not in VC!**")  # Generic catch for "not in VC"
+        return await eor(message, "**I am Not in VC!**")
 
-
+# Resume stream
 @app.on_message(cdz(["rsm", "resume", "vrsm", "vresume"]) & ~filters.private)
 async def resume_stream(client, message):
     if message.sender_chat:
@@ -39,12 +36,10 @@ async def resume_stream(client, message):
             return await eor(message, "**Already Playing!**")
         elif a.status == "not_playing":
             return await eor(message, "**Nothing Streaming!**")
-    except AlreadyJoinedError:
-        return await eor(message, "**Assistant Already in VC!**")
     except Exception:
         return await eor(message, "**I am Not in VC!**")
 
-
+# Skip current stream
 @app.on_message(cdz(["skp", "skip", "vskp", "vskip"]) & ~filters.private)
 async def skip_stream(client, message):
     if message.sender_chat:
@@ -57,7 +52,7 @@ async def skip_stream(client, message):
             queue_empty = await is_queue_empty(chat_id)
             if queue_empty:
                 await call.leave_group_call(chat_id)
-                return await eor(message, "**🚫 Hey, Queue is Empty,\nSo Leaving VC❗...**")
+                return await eor(message, "**🚫 Hey, Queue is Empty, So Leaving VC❗...**")
             check = await get_from_queue(chat_id)
             media = check["media"]
             type = check["type"]
@@ -66,12 +61,10 @@ async def skip_stream(client, message):
             return await eor(message, "Now Streaming ...")
         elif a.status == "not_playing":
             return await eor(message, "**Nothing Playing!**")
-    except AlreadyJoinedError:
-        return await eor(message, "**Assistant Already in VC!**")
     except Exception:
         return await eor(message, "**I am Not in VC!**")
 
-
+# Stop stream
 @app.on_message(cdz(["stp", "stop", "end", "vend"]) & ~filters.private)
 async def cease_stream(client, message):
     if message.sender_chat:
@@ -83,7 +76,5 @@ async def cease_stream(client, message):
             await clear_queue(chat_id)
             await call.leave_group_call(chat_id)
             return await eor(message, "**Stream Ended!**")
-    except AlreadyJoinedError:
-        return await eor(message, "**Assistant Already in VC!**")
     except Exception:
         return await eor(message, "**I am Not in VC!**")
