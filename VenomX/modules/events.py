@@ -5,7 +5,7 @@ from VenomX.modules.streams import get_media_stream
 from pyrogram import filters
 from pyrogram.types import Message
 from pytgcalls.types import Update
-from pytgcalls.types import StreamAudioEnded
+from pytgcalls import StreamEnd
 from typing import Union, List
 
 
