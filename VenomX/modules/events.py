@@ -34,7 +34,6 @@ async def eor(message: Message, *args, **kwargs) -> Message:
 
 
 async def call_decorators():
-    @call.on_left()
     async def stream_services_handler(client, chat_id: int):
         queue_empty = await queues.is_queue_empty(chat_id)
         if not queue_empty:
@@ -44,7 +43,6 @@ async def call_decorators():
         except:
             return
 
-    @call.on_stream_end()
     async def stream_end_handler_(client, update: Update):
         if not isinstance(update, StreamAudioEnded):
             return
