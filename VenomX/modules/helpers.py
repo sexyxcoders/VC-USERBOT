@@ -4,12 +4,12 @@ import yt_dlp
 
 # Try to import PyTgCalls stream classes in a version-agnostic way
 try:
-    # Newer pytgcalls versions
+    # PyTgCalls v3.x (dev) with AudioPiped / VideoPiped
     from pytgcalls.types.input_stream import AudioPiped, VideoPiped
 except ModuleNotFoundError:
-    # Older pytgcalls versions (v2.x)
-    from pytgcalls.types import InputAudioStream as AudioPiped
-    from pytgcalls.types import InputVideoStream as VideoPiped
+    # PyTgCalls v2.x (stable)
+    from py_tgcalls.types import InputAudioStream as AudioPiped
+    from py_tgcalls.types import InputVideoStream as VideoPiped
 
 # Ensure downloads folder exists
 os.makedirs("downloads", exist_ok=True)
