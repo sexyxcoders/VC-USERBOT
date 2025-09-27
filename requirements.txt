@@ -1,5 +1,5 @@
 # Core dependencies
-pyrogram==2.1.23
+pyrogram==2.0.106
 tgcrypto
 pytgcalls==3.0.0.dev24
 python-dotenv
