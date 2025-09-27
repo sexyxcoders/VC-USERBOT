@@ -1,27 +1,29 @@
 from pyrogram import Client
 from VenomX import config
 
-# Try importing PyTgCalls in a version-agnostic way
+# === Import PyTgCalls (handles both v2.x and v3.x) ===
 try:
+    # v3.x (latest dev6)
     from pytgcalls import PyTgCalls
 except ImportError:
+    # v2.x / old structure
     from pytgcalls.pytgcalls import PyTgCalls
 
-# Userbot client
+# === USERBOT CLIENT ===
 app = Client(
-    "VenomX",
+    "VenomXUser",
     api_id=config.API_ID,
     api_hash=config.API_HASH,
     session_string=config.STRING_SESSION
 )
 
-# Bot client (optional)
+# === BOT CLIENT (for commands) ===
 bot = Client(
     "VenomXBot",
-    bot_token=config.BOT_TOKEN,
     api_id=config.API_ID,
-    api_hash=config.API_HASH
+    api_hash=config.API_HASH,
+    bot_token=config.BOT_TOKEN
 )
 
-# PyTgCalls client
+# === VC CLIENT ===
 call = PyTgCalls(app)
