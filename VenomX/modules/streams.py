@@ -1,64 +1,93 @@
-import asyncio, yt_dlp, os
+import asyncio, re, yt_dlp
+
+from VenomX import config
+from pyrogram.types import Audio, Voice
+from pyrogram.types import Video, VideoNote
+from pytgcalls.types import AudioQuality, VideoQuality
+from pytgcalls.types import MediaStream
+from pytgcalls.types.raw import AudioParameters
+from pytgcalls.types.raw import VideoParameters
 from typing import Union
-from pyrogram.types import Audio, Voice, Video, VideoNote
-from pytgcalls.types.input_stream import InputAudioStream, InputVideoStream
-from pytgcalls.types.input_stream.quality import HighQualityAudio, HighQualityVideo
 from youtubesearchpython.__future__ import VideosSearch
 
-os.makedirs("downloads", exist_ok=True)
 
-# -------------------------------
-# File name helpers
-# -------------------------------
 def get_audio_name(audio: Union[Audio, Voice]):
     try:
-        ext = "ogg" if isinstance(audio, Voice) else audio.file_name.split(".")[-1]
-        return f"{audio.file_unique_id}.{ext}"
+        file_name = (
+            audio.file_unique_id
+            + "."
+            + (
+                (audio.file_name.split(".")[-1])
+                if (not isinstance(audio, Voice))
+                else "ogg"
+            )
+        )
     except:
-        return f"{audio.file_unique_id}.ogg"
+        file_name = audio.file_unique_id + "." + ".ogg"
+        
+    return file_name
+
 
 def get_video_name(video: Union[Video, VideoNote]):
     try:
-        return f"{video.file_unique_id}.{video.file_name.split('.')[-1]}"
+        file_name = (
+            video.file_unique_id
+            + "."
+            + (video.file_name.split(".")[-1])
+        )
     except:
-        return f"{video.file_unique_id}.mp4"
+        file_name = video.file_unique_id + "." + "mp4"
+    
+    return file_name
+    
 
-# -------------------------------
-# YouTube search
-# -------------------------------
-async def get_media_info(vidid: str = None, query: str = None):
-    url = f"https://www.youtube.com/watch?v={vidid}" if vidid else None
+# Get Details Of Youtube Video
+async def get_media_info(vidid: str, query: str):
+    url = (
+        f"https://www.youtube.com/watch?v={vidid}"
+        if vidid else None
+    )
     search = url if url else query
     results = VideosSearch(search, limit=1)
     for result in (await results.next())["result"]:
-        videoid = vidid if vidid else result["id"]
+        videoid= vidid if vidid else result["id"]
         videourl = url if url else result["link"]
-    return videoid, videourl
 
-# -------------------------------
-# Get stream link
-# -------------------------------
+    return [videoid, videourl]
+
+
+
+# Direct Link From YouTube
 async def get_stream_link(link: str):
     proc = await asyncio.create_subprocess_exec(
-        "yt-dlp", "-g", "-f", "bestvideo+bestaudio/best", link,
+        "yt-dlp",
+        "-g",
+        "-f",
+        "bestvideo+bestaudio/best",
+        "--cookies", "cookies.txt",
+        f"{link}",
         stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE
+        stderr=asyncio.subprocess.PIPE,
     )
-    stdout, _ = await proc.communicate()
-    return stdout.decode().split('\n')[:2]
+    stdout, stderr = await proc.communicate()
+    links = stdout.decode().split('\n')
+    return links[0], links[1]
 
-# -------------------------------
-# PyTgCalls stream wrapper
-# -------------------------------
-async def get_media_stream(media: str, type_: str):
-    if type_ == "Audio":
-        return InputAudioStream(
-            media,
-            HighQualityAudio()
+
+# Stream Using PyTgCalls
+async def get_media_stream(media, type: str):
+    if type == "Audio":
+        stream = MediaStream(
+            media_path=media,
+            video_flags=MediaStream.IGNORE,
+            audio_parameters=AudioQuality.STUDIO,
         )
-    elif type_ == "Video":
-        return InputVideoStream(
-            media,
-            HighQualityVideo(),
-            HighQualityAudio()
+    elif type == "Video":
+        stream = MediaStream(
+            media_path=media,
+            audio_parameters=AudioQuality.STUDIO,
+            video_parameters=VideoQuality.HD_720p,
         )
+            
+    return stream
+            
