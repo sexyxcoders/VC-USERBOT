@@ -26,7 +26,7 @@ async def eor(message: Message, *args, **kwargs) -> Message:
             if bool(message.from_user and message.from_user.is_self or message.outgoing)
             else (message.reply_to_message or message).reply_text
         )
-    except:
+    except Exception:
         msg = (
             message.edit_text
             if bool(message.from_user and message.outgoing)
@@ -45,26 +45,25 @@ async def call_decorators():
             await queues.clear_queue(chat_id)
         try:
             return await call.leave_group_call(chat_id)
-        except:
+        except Exception:
             return
 
     # Stream end handler for PyTgCalls v2.2+
-    async def stream_end_handler(update: StreamEnded):
+    @call.on_stream_end()
+    async def stream_end_handler(_, update: StreamEnded):
         chat_id = update.chat_id
         await queues.task_done(chat_id)
         queue_empty = await queues.is_queue_empty(chat_id)
+
         if queue_empty:
             try:
                 await call.leave_group_call(chat_id)
-            except:
+            except Exception:
                 return
         else:
             check = await queues.get_from_queue(chat_id)
             media = check["media"]
-            type = check["type"]
-            stream = await get_media_stream(media, type)
+            type_ = check["type"]
+            stream = await get_media_stream(media, type_)
             await call.change_stream(chat_id, stream)
             await app.send_message(chat_id, "Streaming ...")
-
-    # Attach handler to PyTgCalls client
-    call.add_stream_handler(stream_end_handler)
