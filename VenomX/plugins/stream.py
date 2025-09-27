@@ -46,28 +46,29 @@ async def start_stream(client, message):
         else:
             type = "Audio"
         media = await download_media_file(link, type)
+    
+    # ---------------- Fixed part for PyTgCalls v2 ----------------
     try:
-        a = await call.get_call(chat_id)
-        if a.status == "not_playing":
-            stream = await get_media_stream(media, type)
-            await call.change_stream(chat_id, stream)
-            await add_to_queue(chat_id, media=media, type=type)
-            return await aux.edit("**Streaming Started ....**")
-        elif (a.status == "playing" or a.status == "paused"):
-            position = await add_to_queue(chat_id, media=media, type=type)
-            return await aux.edit(f"**Added to Queue At {position}**")
-    except GroupCallNotFound:
-        try:
+        a = call.active_calls.get(chat_id)  # <-- v2 replacement
+        if a:
+            if a.status == "not_playing":
+                stream = await get_media_stream(media, type)
+                await call.change_stream(chat_id, stream)
+                await add_to_queue(chat_id, media=media, type=type)
+                return await aux.edit("**Streaming Started ....**")
+            elif a.status in ["playing", "paused"]:
+                position = await add_to_queue(chat_id, media=media, type=type)
+                return await aux.edit(f"**Added to Queue At {position}**")
+        else:
+            # No active call, join a new one
             stream = await get_media_stream(media, type)
             await call.join_group_call(chat_id, stream, auto_start=False)
             await add_to_queue(chat_id, media=media, type=type)
             return await aux.edit("**Streaming Started ....**")
-        except NoActiveGroupCall:
-            return await aux.edit("**No Active VC !**")
-        except AlreadyJoinedError:
-            return await aux.edit("**Assistant Already in VC !**")
-        except Exception as e:
-            print(f"Error: {e}")
-            return await aux.edit("**Please Try Again !**")
-        except:
-            return
+    except NoActiveGroupCall:
+        return await aux.edit("**No Active VC !**")
+    except AlreadyJoinedError:
+        return await aux.edit("**Assistant Already in VC !**")
+    except Exception as e:
+        print(f"Error: {e}")
+        return await aux.edit("**Please Try Again !**")
