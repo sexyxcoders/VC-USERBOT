@@ -1,6 +1,11 @@
 from pyrogram import Client
-from pytgcalls import PyTgCalls
 from VenomX import config
+
+# Try importing PyTgCalls in a version-agnostic way
+try:
+    from pytgcalls import PyTgCalls
+except ImportError:
+    from pytgcalls.pytgcalls import PyTgCalls
 
 # Userbot client
 app = Client(
