@@ -17,7 +17,7 @@ pillow==10.4.0
 psutil
 tgcrypto==1.2.3
 pyrogram==1.4.16
-git+https://github.com/pytgcalls/pytgcalls@v0.9.7
+py-tgcalls
 pykeyboard
 python-dotenv
 requests
