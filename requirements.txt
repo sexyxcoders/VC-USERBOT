@@ -12,4 +12,4 @@ yt-dlp==2023.12.30
 youtube-search-python==1.6
 
 # --- PyTgCalls (Voice Chat) ---
-git+https://github.com/pytgcalls/pytgcalls@v3.0.0.dev6
+py-tgcalls==2.1.0
