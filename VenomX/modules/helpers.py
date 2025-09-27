@@ -3,7 +3,7 @@ import asyncio
 import yt_dlp
 
 # --- Correct imports for py-tgcalls v2.1.0 ---
-from py_tgcalls.types import from py_tgcalls.types import InputAudioStream as AudioPiped
+from py_tgcalls.types import InputAudioStream as AudioPiped
 from py_tgcalls.types import InputVideoStream as VideoPiped
 
 # Ensure downloads folder exists
