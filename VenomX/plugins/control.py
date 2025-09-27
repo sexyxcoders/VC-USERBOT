@@ -1,91 +1,63 @@
-from VenomX.modules.clients import app, call
-from VenomX.modules.helpers import cdz, eor
-from VenomX.modules.queues import add_to_queue, get_from_queue, clear_queue, is_queue_empty, task_done
-from VenomX.modules.streams import get_media_stream
+import re
 from pyrogram import filters
+from VenomX.modules.clients import app, call, cdz, eor
+from VenomX.modules.streams import get_media_stream
+from VenomX.modules.queues import add_to_queue, get_from_queue, is_queue_empty
+from VenomX.modules.streams import download_media_file, get_media_info
+from pytgcalls.types.input_stream import AudioPiped, VideoPiped
 
 # -------------------------------
-# Pause stream
+# Play / Stream command
 # -------------------------------
-@app.on_message(cdz(["pause", "pse"]) & ~filters.private)
-async def pause_stream(client, message):
+@app.on_message(cdz(["play", "ply", "vplay", "vply"]) & ~filters.private)
+async def start_stream(client, message):
     if message.sender_chat:
         return
-    chat_id = message.chat.id
-    try:
-        call_obj = await call.get_call(chat_id)
-        if call_obj.status == "playing":
-            await call.pause_stream(chat_id)
-            return await eor(message, "⏸ Stream Paused!")
-        elif call_obj.status == "paused":
-            return await eor(message, "⚠ Already Paused!")
-        elif call_obj.status == "not_playing":
-            return await eor(message, "❌ Nothing Streaming!")
-    except Exception:
-        return await eor(message, "❌ I am Not in VC!")
 
-# -------------------------------
-# Resume stream
-# -------------------------------
-@app.on_message(cdz(["resume", "rsm"]) & ~filters.private)
-async def resume_stream(client, message):
-    if message.sender_chat:
-        return
+    aux = await eor(message, "🔄 Processing ...")
     chat_id = message.chat.id
-    try:
-        call_obj = await call.get_call(chat_id)
-        if call_obj.status == "paused":
-            await call.resume_stream(chat_id)
-            return await eor(message, "▶ Stream Resumed!")
-        elif call_obj.status == "playing":
-            return await eor(message, "⚠ Already Playing!")
-        elif call_obj.status == "not_playing":
-            return await eor(message, "❌ Nothing Streaming!")
-    except Exception:
-        return await eor(message, "❌ I am Not in VC!")
+    replied = message.reply_to_message
+    command = str(message.command[0]).lower()
 
-# -------------------------------
-# Skip stream
-# -------------------------------
-@app.on_message(cdz(["skip", "skp"]) & ~filters.private)
-async def skip_stream(client, message):
-    if message.sender_chat:
-        return
-    chat_id = message.chat.id
-    try:
-        call_obj = await call.get_call(chat_id)
-        if call_obj.status in ["playing", "paused"]:
-            await task_done(chat_id)
-            queue_empty = await is_queue_empty(chat_id)
-            if queue_empty:
-                await call.leave_group_call(chat_id)
-                return await eor(message, "❌ Queue empty, leaving VC...")
-            
-            # Get next in queue
-            check = await get_from_queue(chat_id)
-            media = check["media"]
-            type_ = check["type"]
-            stream = await get_media_stream(media, type_)
-            await call.change_stream(chat_id, stream)
-            return await eor(message, "▶ Now Streaming next in Queue ...")
-        elif call_obj.status == "not_playing":
-            return await eor(message, "❌ Nothing Playing!")
-    except Exception:
-        return await eor(message, "❌ I am Not in VC!")
+    # Determine type
+    audiostream = replied.audio or replied.voice if replied else None
+    videostream = replied.video or replied.document if replied else None
 
-# -------------------------------
-# Stop stream
-# -------------------------------
-@app.on_message(cdz(["stop", "stp", "end"]) & ~filters.private)
-async def stop_stream(client, message):
-    if message.sender_chat:
-        return
-    chat_id = message.chat.id
+    if audiostream:
+        media = await client.download_media(replied)
+        type_ = "Audio"
+    elif videostream:
+        media = await client.download_media(replied)
+        type_ = "Video"
+    else:
+        if len(message.command) < 2:
+            return await aux.edit("❌ Give a query or reply to a file to stream!")
+
+        query = message.text.split(None, 1)[1]
+        vidid = None
+        if "https://" in query:
+            base = r"(?:https?:)?(?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube(?:\-nocookie)?\.(?:[A-Za-z]{2,4}|[A-Za-z]{2,3}\.[A-Za-z]{2})\/)?(?:shorts\/|live\/)?(?:watch|embed\/|vi?\/)*(?:\?[\w=&]*vi?=)?([^#&\?\/]{11}).*$"
+            resu = re.findall(base, query)
+            vidid = resu[0] if resu else None
+
+        results = await get_media_info(vidid, query)
+        link = str(results[1])
+        type_ = "Video" if command.startswith("v") else "Audio"
+        media = await download_media_file(link, type_)
+
+    # Try to get active call
     try:
         call_obj = await call.get_call(chat_id)
-        if call_obj.status in ["playing", "paused", "not_playing"]:
-            await clear_queue(chat_id)
-            await call.leave_group_call(chat_id)
-            return await eor(message, "⏹ Stream Ended!")
-    except Exception:
-        return await eor(message, "❌ I am Not in VC!")
+        if call_obj is None or not call_obj.is_active:
+            # Join VC
+            stream = AudioPiped(media) if type_ == "Audio" else VideoPiped(media)
+            await call.join_group_call(chat_id, stream)
+            await add_to_queue(chat_id, media=media, type=type_)
+            return await aux.edit("▶ Streaming started!")
+        else:
+            # Already in VC, add to queue
+            position = await add_to_queue(chat_id, media=media, type=type_)
+            return await aux.edit(f"✅ Added to queue at position {position}")
+    except Exception as e:
+        print(f"❌ Error in streaming: {e}")
+        return await aux.edit("❌ Could not start streaming. Try again!")
