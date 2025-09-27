@@ -2,7 +2,7 @@ yt-dlp==2023.12.30
 aiofiles==23.2.1
 aiohttp==3.9.3
 pyrogram==2.0.106
-git+https://github.com/pytgcalls/pytgcalls@v3.0.0.dev6
+git+https://github.com/pytgcalls/pytgcalls@v3.0.0.dev5
 python-dotenv==1.0.0
 tgcrypto==1.2.5
 youtube-search-python==1.6
