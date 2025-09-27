@@ -1,11 +1,19 @@
 import os
 import asyncio
 import yt_dlp
-from py_tgcalls.types import InputAudioStream as AudioPiped
-from py_tgcalls.types import InputVideoStream as VideoPiped
+
+# Try to import PyTgCalls stream classes
+try:
+    # Newer PyTgCalls versions
+    from pytgcalls.types.input_stream import AudioPiped, VideoPiped
+except ModuleNotFoundError:
+    # Older PyTgCalls versions (v2.x)
+    from pytgcalls.types import InputAudioStream as AudioPiped
+    from pytgcalls.types import InputVideoStream as VideoPiped
 
 # Ensure downloads folder exists
 os.makedirs("downloads", exist_ok=True)
+
 
 async def download_media_file(link: str, type: str):
     loop = asyncio.get_running_loop()
@@ -28,6 +36,7 @@ async def download_media_file(link: str, type: str):
         await loop.run_in_executor(None, lambda: ydl.download([link]))
 
     return file_path
+
 
 async def get_media_stream(media: str, type: str):
     if type == "Audio":
