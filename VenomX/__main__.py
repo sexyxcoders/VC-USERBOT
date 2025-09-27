@@ -1,9 +1,8 @@
 import asyncio
 import pyrogram
-
 from VenomX import app, bot, call
 from VenomX.plugins import load_plugins
-from VenomX.modules.events import call_decorators
+from VenomX.modules.helpers import call_decorators
 
 loop = asyncio.get_event_loop()
 
@@ -23,7 +22,7 @@ async def init():
         await call.start()
         print("✅ PyTgCalls client started.")
 
-        # Register stream end handlers (0.9.7 style)
+        # Register stream end handlers (updated for v3)
         await call_decorators()
         print("✅ Stream handlers registered.")
 
@@ -36,7 +35,6 @@ async def init():
         return
 
     print("🎵 Userbot Now Started !!")
-    # Keep running until manually stopped
     await pyrogram.idle()
 
 if __name__ == "__main__":
