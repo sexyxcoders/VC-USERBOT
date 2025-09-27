@@ -1,8 +1,8 @@
 import asyncio
-import pyrogram
+from pyrogram import idle
 from VenomX import app, bot, call
 from VenomX.plugins import load_plugins
-from VenomX.modules.helpers import call_decorators
+from VenomX.modules.events import call_decorators
 
 loop = asyncio.get_event_loop()
 
@@ -10,11 +10,11 @@ async def init():
     print("🔹 Starting all clients ...")
 
     try:
-        # Start Pyrogram user client
+        # Start user client
         await app.start()
         print("✅ User client started.")
 
-        # Start Pyrogram bot client
+        # Start bot client
         await bot.start()
         print("✅ Bot client started.")
 
@@ -22,7 +22,7 @@ async def init():
         await call.start()
         print("✅ PyTgCalls client started.")
 
-        # Register stream end handlers (updated for v3)
+        # Register stream handlers
         await call_decorators()
         print("✅ Stream handlers registered.")
 
@@ -35,7 +35,7 @@ async def init():
         return
 
     print("🎵 Userbot Now Started !!")
-    await pyrogram.idle()
+    await idle()  # Keep running until stopped
 
 if __name__ == "__main__":
     try:
