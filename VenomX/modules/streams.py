@@ -1,93 +1,100 @@
-import asyncio, re, yt_dlp
-
-from VenomX import config
-from pyrogram.types import Audio, Voice
-from pyrogram.types import Video, VideoNote
-from pytgcalls.types import AudioQuality, VideoQuality
-from pytgcalls.types import MediaStream
-from pytgcalls.types.raw import AudioParameters
-from pytgcalls.types.raw import VideoParameters
+import asyncio
 from typing import Union
+from pyrogram.types import Audio, Voice, Video, VideoNote
 from youtubesearchpython.__future__ import VideosSearch
+from pytgcalls.types import MediaStream
+from pytgcalls.types import AudioQuality, VideoQuality
 
 
-def get_audio_name(audio: Union[Audio, Voice]):
+# -----------------------------
+# Helper Functions for Filenames
+# -----------------------------
+def get_audio_name(audio: Union[Audio, Voice]) -> str:
+    """
+    Returns a safe filename for Audio or Voice messages.
+    """
     try:
-        file_name = (
-            audio.file_unique_id
-            + "."
-            + (
-                (audio.file_name.split(".")[-1])
-                if (not isinstance(audio, Voice))
-                else "ogg"
-            )
-        )
-    except:
-        file_name = audio.file_unique_id + "." + ".ogg"
-        
+        ext = "ogg" if isinstance(audio, Voice) else audio.file_name.split(".")[-1]
+        file_name = f"{audio.file_unique_id}.{ext}"
+    except Exception:
+        file_name = f"{audio.file_unique_id}.ogg"
     return file_name
 
 
-def get_video_name(video: Union[Video, VideoNote]):
+def get_video_name(video: Union[Video, VideoNote]) -> str:
+    """
+    Returns a safe filename for Video or VideoNote messages.
+    """
     try:
-        file_name = (
-            video.file_unique_id
-            + "."
-            + (video.file_name.split(".")[-1])
-        )
-    except:
-        file_name = video.file_unique_id + "." + "mp4"
-    
+        ext = video.file_name.split(".")[-1]
+        file_name = f"{video.file_unique_id}.{ext}"
+    except Exception:
+        file_name = f"{video.file_unique_id}.mp4"
     return file_name
-    
 
-# Get Details Of Youtube Video
-async def get_media_info(vidid: str, query: str):
-    url = (
-        f"https://www.youtube.com/watch?v={vidid}"
-        if vidid else None
-    )
-    search = url if url else query
-    results = VideosSearch(search, limit=1)
+
+# -----------------------------
+# YouTube Helpers
+# -----------------------------
+async def get_media_info(vidid: str = None, query: str = None) -> list[str]:
+    """
+    Returns [videoid, videourl] for a YouTube video based on ID or search query.
+    """
+    url = f"https://www.youtube.com/watch?v={vidid}" if vidid else None
+    search_term = url if url else query
+
+    results = VideosSearch(search_term, limit=1)
     for result in (await results.next())["result"]:
-        videoid= vidid if vidid else result["id"]
+        videoid = vidid if vidid else result["id"]
         videourl = url if url else result["link"]
+        return [videoid, videourl]
+    
+    return [None, None]
 
-    return [videoid, videourl]
 
-
-
-# Direct Link From YouTube
-async def get_stream_link(link: str):
+async def get_stream_link(link: str) -> tuple[str, str]:
+    """
+    Returns direct video and audio URLs from a YouTube link using yt-dlp.
+    """
     proc = await asyncio.create_subprocess_exec(
         "yt-dlp",
         "-g",
         "-f",
         "bestvideo+bestaudio/best",
         "--cookies", "cookies.txt",
-        f"{link}",
+        link,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
     stdout, stderr = await proc.communicate()
-    links = stdout.decode().split('\n')
-    return links[0], links[1]
+    lines = stdout.decode().splitlines()
+    if len(lines) < 2:
+        raise Exception(f"Failed to get stream links: {stderr.decode()}")
+    return lines[0], lines[1]
 
 
-# Stream Using PyTgCalls
-async def get_media_stream(media, type: str):
-    if type == "Audio":
+# -----------------------------
+# PyTgCalls Media Stream
+# -----------------------------
+async def get_media_stream(media: str, type: str) -> MediaStream:
+    """
+    Returns a MediaStream object for PyTgCalls.
+    type: "audio" or "video"
+    """
+    type_lower = type.lower()
+    if type_lower == "audio":
+        # Audio-only stream
         stream = MediaStream(
             media_path=media,
-            video_flags=MediaStream.IGNORE,
             audio_parameters=AudioQuality.STUDIO,
         )
-    elif type == "Video":
+    elif type_lower == "video":
+        # Audio + Video stream
         stream = MediaStream(
             media_path=media,
             audio_parameters=AudioQuality.STUDIO,
             video_parameters=VideoQuality.HD_720p,
         )
-            
+    else:
+        raise ValueError("Invalid type: must be 'audio' or 'video'")
     return stream
-            
