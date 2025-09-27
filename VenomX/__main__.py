@@ -1,31 +1,43 @@
-import asyncio, pyrogram
+import asyncio
+import pyrogram
+import signal
+import sys
 
-from VenomX import app, bot, call
+from VenomX.modules.clients import app, bot, call
 from VenomX.plugins import load_plugins
 
 
-loop = asyncio.get_event_loop()
-
 async def init():
-    print("Starting all clients ...")
+    print("🚀 Starting all clients ...")
     try:
         await app.start()
-        print("User client started.")
+        print("✅ User client started.")
+
         await bot.start()
-        print("Bot client started.")
+        print("✅ Bot client started.")
+
         await call.start()
-        print("PyTgCalls client started.")
+        print("✅ PyTgCalls client started.")
+
         await load_plugins()
-        print("All plugins loaded.")
-        # removed: await call_decorators()
+        print("✅ All plugins loaded.")
+
+        print("🎉 VenomX Now Running!")
+        await pyrogram.idle()
+
     except Exception as e:
-        return print(
-            f"Error: {e}"
-        )
-    print("VenomX Now Started !!")
-    await pyrogram.idle()
+        print(f"❌ Startup Error: {e}")
+
+    finally:
+        print("🛑 Shutting down ...")
+        await call.stop()
+        await bot.stop()
+        await app.stop()
+        print("✅ VenomX Stopped Cleanly!")
 
 
 if __name__ == "__main__":
-    loop.run_until_complete(init())
-    print("VenomX Now Stopped !!")
+    try:
+        asyncio.run(init())
+    except (KeyboardInterrupt, SystemExit):
+        sys.exit("🛑 Forced Stop")
