@@ -1,12 +1,12 @@
 from typing import Union, List
 from pyrogram import filters
 from pyrogram.types import Message
-from pytgcalls import idle
+
 from VenomX import config
 from VenomX.modules import queues
 from VenomX.modules.clients import app, call
 from VenomX.modules.streams import get_media_stream
-from pytgcalls.types import StreamEnded  # v2 event
+from pytgcalls.types import Update  # old v0.9.x event type
 
 
 # Command filters
@@ -26,7 +26,7 @@ async def eor(message: Message, *args, **kwargs) -> Message:
             if bool(message.from_user and message.from_user.is_self or message.outgoing)
             else (message.reply_to_message or message).reply_text
         )
-    except Exception:
+    except:
         msg = (
             message.edit_text
             if bool(message.from_user and message.outgoing)
@@ -36,6 +36,7 @@ async def eor(message: Message, *args, **kwargs) -> Message:
     return await msg(*args, **kwargs)
 
 
+# Call-related decorators and event handlers
 async def call_decorators():
     # Handler to leave group call if queue is empty
     async def stream_services_handler(client, chat_id: int):
@@ -44,11 +45,11 @@ async def call_decorators():
             await queues.clear_queue(chat_id)
         try:
             return await call.leave_group_call(chat_id)
-        except Exception:
+        except:
             return
 
-    # Stream end handler for PyTgCalls
-    async def stream_end_handler(update: StreamEnded):
+    # Stream end handler for PyTgCalls v0.9.x
+    async def stream_end_handler(update: Update):
         chat_id = update.chat_id
         await queues.task_done(chat_id)
         queue_empty = await queues.is_queue_empty(chat_id)
@@ -56,15 +57,15 @@ async def call_decorators():
         if queue_empty:
             try:
                 await call.leave_group_call(chat_id)
-            except Exception:
+            except:
                 return
         else:
             check = await queues.get_from_queue(chat_id)
             media = check["media"]
-            type_ = check["type"]
-            stream = await get_media_stream(media, type_)
+            type = check["type"]
+            stream = await get_media_stream(media, type)
             await call.change_stream(chat_id, stream)
             await app.send_message(chat_id, "Streaming ...")
 
-    # Attach handler to PyTgCalls client
-    call.on_stream_end(stream_end_handler)
+    # Attach handler to PyTgCalls client (v0.9.x style)
+    call.add_stream_handler(stream_end_handler)
