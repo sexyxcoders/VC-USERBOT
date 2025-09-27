@@ -5,7 +5,7 @@ from VenomX import config
 from VenomX.modules import queues
 from VenomX.modules.clients import app, call
 from VenomX.modules.streams import get_media_stream
-from pytgcalls import StreamEnd
+from pytgcalls.types import StreamEnd
 
 # Command filters
 def cdx(commands: Union[str, List[str]]):
@@ -20,7 +20,7 @@ async def eor(message: Message, *args, **kwargs) -> Message:
     return await msg(*args, **kwargs)
 
 # -------------------------------
-# Stream handler registration
+# Stream end handler registration
 # -------------------------------
 async def call_decorators():
     @call.on_stream_end()
