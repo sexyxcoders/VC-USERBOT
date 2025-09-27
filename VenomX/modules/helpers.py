@@ -1,15 +1,7 @@
 import os
 import asyncio
 import yt_dlp
-
-# Try to import PyTgCalls stream classes
-try:
-    # Newer PyTgCalls versions
-    from pytgcalls.types.input_stream import AudioPiped, VideoPiped
-except ModuleNotFoundError:
-    # Older PyTgCalls versions (v2.x)
-    from pytgcalls.types import InputAudioStream as AudioPiped
-    from pytgcalls.types import InputVideoStream as VideoPiped
+from pytgcalls.types.input_stream import AudioPiped, VideoPiped
 
 # Ensure downloads folder exists
 os.makedirs("downloads", exist_ok=True)
