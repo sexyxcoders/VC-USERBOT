@@ -1,7 +1,7 @@
 import os
 import asyncio
 import yt_dlp
-from pytgcalls.types.input_stream import InputAudioStream, InputVideoStream
+from pytgcalls.types import AudioPiped, VideoPiped
 
 # Ensure downloads folder exists
 os.makedirs("downloads", exist_ok=True)
@@ -55,18 +55,18 @@ async def download_media_file(link: str, type: str):
 
 async def get_media_stream(media: str, type: str):
     """
-    Returns a PyTgCalls v2 compatible stream object.
+    Returns a PyTgCalls v0.9.7 compatible stream object.
 
     Args:
         media (str): File path or URL
         type (str): "Audio" or "Video"
 
     Returns:
-        InputAudioStream or InputVideoStream instance
+        AudioPiped or VideoPiped instance
     """
     if type == "Audio":
-        return InputAudioStream(media)
+        return AudioPiped(media)
     elif type == "Video":
-        return InputVideoStream(media)
+        return VideoPiped(media)
     else:
         raise ValueError("Invalid type. Must be 'Audio' or 'Video'.")
