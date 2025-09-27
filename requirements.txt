@@ -3,7 +3,7 @@ aiofiles==23.2.1
 aiohttp==3.9.3
 # asyncio is part of Python stdlib, you don't need to install separately (remove it)
 pyrogram==2.0.106
-py-tgcalls==2.0.1
+py-tgcalls>=0.9.8
 ntgcalls==1.2.3
 python-dotenv==1.0.0
 tgcrypto==1.2.5
