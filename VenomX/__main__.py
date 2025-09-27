@@ -1,7 +1,6 @@
 import asyncio, pyrogram
 
 from VenomX import app, bot, call
-from VenomX import call_decorators
 from VenomX.plugins import load_plugins
 
 
