@@ -1,4 +1,4 @@
-# Core dependencies
+# BY IVAN
 pyrogram==2.0.106
 tgcrypto==1.2.5
 python-dotenv==1.0.0
@@ -7,6 +7,6 @@ aiohttp==3.9.3
 yt-dlp==2023.12.30
 youtube-search-python==1.6
 
-# PyTgCalls stable release compatible with Pyrogram
+# BSDK AAB GAND MT MRDENA 
 pytgcalls==2.1.0
 tgcalls==2.0.0
