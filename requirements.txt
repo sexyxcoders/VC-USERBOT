@@ -17,7 +17,7 @@ pillow==10.4.0
 psutil
 tgcrypto
 https://github.com/KurimuzonAkuma/pyrogram/archive/v2.1.23.zip
-git+https://github.com/pytgcalls/pytgcalls@v2.2.8
+git+https://github.com/pytgcalls/pytgcalls@v2.1.2
 pykeyboard
 python-dotenv
 requests
