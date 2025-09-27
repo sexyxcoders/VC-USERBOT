@@ -1,41 +1,36 @@
-import asyncio, os, yt_dlp, ssl, certifi
+import asyncio, os, yt_dlp
 
-# Use certifi root CA (fix Heroku SSL issues)
-ssl._create_default_https_context = lambda: ssl.create_default_context(cafile=certifi.where())
-os.makedirs("downloads", exist_ok=True)
 
-async def download_media_file(link: str, type_: str):
-    """
-    Download audio or video from YouTube asynchronously.
-    Returns the path to the downloaded file.
-    """
+async def download_media_file(link: str, type: str):
     loop = asyncio.get_running_loop()
-
-    if type_ == "Audio":
+    if type == "Audio":
         ydl_opts = {
             "format": "bestaudio/best",
             "outtmpl": "downloads/%(id)s.%(ext)s",
+            "geo_bypass": True,
+            "nocheckcertificate": True,
             "quiet": True,
-            "cookiefile": "cookies.txt"
+            "no_warnings": True,
+            "cookiefile": "cookies.txt",
         }
-    else:
+
+    elif type == "Video":
         ydl_opts = {
-            "format": "(bestvideo[height<=?720][ext=mp4]+bestaudio[ext=m4a]/best)",
+            "format": "(bestvideo[height<=?720][width<=?1280][ext=mp4])+(bestaudio[ext=m4a])",
             "outtmpl": "downloads/%(id)s.%(ext)s",
+            "geo_bypass": True,
+            "nocheckcertificate": True,
             "quiet": True,
-            "cookiefile": "cookies.txt"
+            "no_warnings": True,
+            "cookiefile": "cookies.txt",
         }
-
-    ydl = yt_dlp.YoutubeDL(ydl_opts)
-
-    # Extract info first (blocking) in executor
-    info = await loop.run_in_executor(None, lambda: ydl.extract_info(link, download=False))
-    file_path = os.path.join("downloads", f"{info['id']}.{info['ext']}")
-
-    # Return existing file if already downloaded
-    if os.path.exists(file_path):
-        return file_path
-
-    # Download file in executor
-    await loop.run_in_executor(None, lambda: ydl.download([link]))
-    return file_path
+        
+    x = yt_dlp.YoutubeDL(ydl_opts)
+    info = x.extract_info(link, False)
+    file = os.path.join(
+        "downloads", f"{info['id']}.{info['ext']}"
+    )
+    if os.path.exists(file):
+        return file
+    await loop.run_in_executor(None, x.download, [link])
+    return file
