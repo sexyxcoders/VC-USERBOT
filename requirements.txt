@@ -7,4 +7,4 @@ yt-dlp==2023.12.30
 youtube-search-python==1.6
 
 # AAB NHI HUA TOH ZERATHOS RANDI 
-git+https://github.com/pytgcalls/pytgcalls@master
+git+https://github.com/pytgcalls/pytgcalls@main
