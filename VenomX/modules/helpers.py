@@ -2,12 +2,12 @@ import os
 import asyncio
 import yt_dlp
 
-# Try to import PyTgCalls stream classes in a version-agnostic way
+# Try to import PyTgCalls stream classes (new first, fallback to old)
 try:
-    # Newer pytgcalls versions
+    # Newer pytgcalls (dev branch)
     from pytgcalls.types.input_stream import AudioPiped, VideoPiped
 except ModuleNotFoundError:
-    # Older pytgcalls versions (v2.x)
+    # Older pytgcalls (<= v2.x)
     from pytgcalls.types import InputAudioStream as AudioPiped
     from pytgcalls.types import InputVideoStream as VideoPiped
 
@@ -17,14 +17,8 @@ os.makedirs("downloads", exist_ok=True)
 
 async def download_media_file(link: str, type: str):
     """
-    Downloads the media file using yt-dlp with SSL fix for Heroku.
-
-    Args:
-        link (str): URL of the media
-        type (str): "Audio" or "Video"
-
-    Returns:
-        str: Local file path of downloaded media
+    Downloads media with yt-dlp.
+    Returns the file path.
     """
     loop = asyncio.get_running_loop()
 
@@ -64,17 +58,10 @@ async def download_media_file(link: str, type: str):
 async def get_media_stream(media: str, type: str):
     """
     Returns a PyTgCalls compatible stream object.
-
-    Args:
-        media (str): File path or URL
-        type (str): "Audio" or "Video"
-
-    Returns:
-        AudioPiped/InputAudioStream or VideoPiped/InputVideoStream instance
     """
     if type == "Audio":
         return AudioPiped(media)
     elif type == "Video":
         return VideoPiped(media)
     else:
-        raise ValueError("Invalid type. Must be 'Audio' or 'Video'.")
+        raise ValueError("Invalid type. Must be 'Audio' or 'Video'")
