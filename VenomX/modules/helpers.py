@@ -2,28 +2,20 @@ import os
 import asyncio
 import yt_dlp
 
-# Try to import PyTgCalls stream classes across versions
+# Try to import PyTgCalls stream classes in a version-agnostic way
 try:
-    # Latest dev branch
-    from pytgcalls.types.stream import AudioPiped, VideoPiped
+    # Newer pytgcalls versions
+    from pytgcalls.types.input_stream import AudioPiped, VideoPiped
 except ModuleNotFoundError:
-    try:
-        # Slightly older dev snapshots
-        from pytgcalls.types.input_stream import AudioPiped, VideoPiped
-    except ModuleNotFoundError:
-        # v2.x stable
-        from pytgcalls.types import InputAudioStream as AudioPiped
-        from pytgcalls.types import InputVideoStream as VideoPiped
+    # Older pytgcalls versions (v2.x)
+    from pytgcalls.types import InputAudioStream as AudioPiped
+    from pytgcalls.types import InputVideoStream as VideoPiped
 
 # Ensure downloads folder exists
 os.makedirs("downloads", exist_ok=True)
 
 
 async def download_media_file(link: str, type: str):
-    """
-    Downloads media with yt-dlp.
-    Returns the file path.
-    """
     loop = asyncio.get_running_loop()
 
     if type == "Audio":
@@ -60,12 +52,9 @@ async def download_media_file(link: str, type: str):
 
 
 async def get_media_stream(media: str, type: str):
-    """
-    Returns a PyTgCalls compatible stream object.
-    """
     if type == "Audio":
         return AudioPiped(media)
     elif type == "Video":
         return VideoPiped(media)
     else:
-        raise ValueError("Invalid type. Must be 'Audio' or 'Video'")
+        raise ValueError("Invalid type. Must be 'Audio' or 'Video'.")
