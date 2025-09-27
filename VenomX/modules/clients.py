@@ -1,22 +1,22 @@
 from pyrogram import Client
-from pytgcalls import GroupCallFactory
+from pytgcalls import PyTgCalls
 from VenomX import config
 
-# Pyrogram client
+# Userbot client
 app = Client(
-    "VenomXUser",
+    "VenomX",
     api_id=config.API_ID,
     api_hash=config.API_HASH,
-    session_string=config.STRING_SESSION  # or leave out for .session file
+    session_string=config.STRING_SESSION
 )
 
+# Bot client (optional)
 bot = Client(
     "VenomXBot",
+    bot_token=config.BOT_TOKEN,
     api_id=config.API_ID,
-    api_hash=config.API_HASH,
-    bot_token=config.BOT_TOKEN
+    api_hash=config.API_HASH
 )
 
-# PyTgCalls initialization
-call_factory = GroupCallFactory(app, GroupCallFactory.MTPROTO_CLIENT_TYPE.PYROGRAM)
-call = call_factory.get_group_call()
+# PyTgCalls client
+call = PyTgCalls(app)
