@@ -1,26 +1,22 @@
 from pyrogram import Client
 from VenomX import config
+from py_tgcalls import PyTgCalls
 
-# Correct import for py-tgcalls v2.1.0
-from pytgcalls import PyTgCalls
-
-# === USERBOT CLIENT ===
+# Userbot client
 app = Client(
-    "VenomXUser",
+    "VenomX",
     api_id=config.API_ID,
     api_hash=config.API_HASH,
     session_string=config.STRING_SESSION
 )
 
-# === BOT CLIENT ===
+# Bot client (optional)
 bot = Client(
     "VenomXBot",
+    bot_token=config.BOT_TOKEN,
     api_id=config.API_ID,
-    api_hash=config.API_HASH,
-    bot_token=config.BOT_TOKEN
+    api_hash=config.API_HASH
 )
 
-# === VOICE CHAT CLIENT ===
+# PyTgCalls client
 call = PyTgCalls(app)
-
-print("✅ Clients initialized: Userbot, Bot, PyTgCalls")
