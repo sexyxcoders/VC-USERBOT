@@ -8,7 +8,7 @@ from .streams import get_media_info, get_stream_link, get_media_stream
 
 __all__ = [
     "app", "bot", "call",
-    "cdx", "cdz", "eor", "call_decorators",
+    "cdx", "cdz", "eor",
     "download_media_file",
     "add_to_queue", "get_from_queue",
     "is_queue_empty", "task_done", "clear_queue",
