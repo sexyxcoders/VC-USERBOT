@@ -15,9 +15,9 @@ numpy==1.26.4
 opencv-python==4.10.0.84
 pillow==10.4.0
 psutil
-tgcrypto
-https://github.com/KurimuzonAkuma/pyrogram/archive/v2.1.23.zip
-py-tgcalls==2.2.8
+tgcrypto==1.2.3
+pyrogram==1.4.16
+pytgcalls==0.9.7
 pykeyboard
 python-dotenv
 requests
