@@ -1,66 +1,43 @@
 import re
-
-from VenomX import app, call, cdz, eor
-from VenomX import add_to_queue
-from VenomX import download_media_file
-from VenomX import get_media_info, get_media_stream
+from VenomX.modules.clients import app, call
+from VenomX.modules.helpers import cdz, eor
+from VenomX.modules.queues import add_to_queue, get_from_queue, clear_queue, is_queue_empty, task_done
+from VenomX.modules.streams import download_media_file, get_media_info, get_media_stream
 from pyrogram import filters
 
-
-@app.on_message(cdz(["ply", "play", "vply", "vplay"]) & ~filters.private)
+# -------------------------------
+# Play command
+# -------------------------------
+@app.on_message(cdz(["play", "ply"]) & ~filters.private)
 async def start_stream(client, message):
     if message.sender_chat:
         return
-    aux = await eor(message, "**🔄 Processing ...**")
+    aux = await eor(message, "🔄 Processing ...")
     chat_id = message.chat.id
-    user_id = message.from_user.id
-    mention = message.from_user.mention
-    replied = message.reply_to_message
-    audiostream = ((replied.audio or replied.voice) if replied else None)
-    videostream = ((replied.video or replied.document) if replied else None)
-    command = str(message.command[0][0])
-    
-    if audiostream:
-        media = await client.download_media(replied)
-        type = "Audio"
-    elif videostream:
-        media = await client.download_media(replied)
-        type = "Video"
-    else:
-        if len(message.command) < 2:
-            return await aux.edit("**🥀 Give Me Some Query To\nStream Audio Or Video❗...**")
-        query = message.text.split(None, 1)[1]
-        if "https://" in query:
-            base = r"(?:https?:)?(?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube(?:\-nocookie)?\.(?:[A-Za-z]{2,4}|[A-Za-z]{2,3}\.[A-Za-z]{2})\/)?(?:shorts\/|live\/)?(?:watch|embed\/|vi?\/)*(?:\?[\w=&]*vi?=)?([^#&\?\/]{11}).*$"
-            resu = re.findall(base, query)
-            vidid = resu[0] if resu[0] else None
-        else:
-            vidid = None
-        results = await get_media_info(vidid, query)
-        link = str(results[1])
-        if command == "v":
-            type = "Video"
-        else:
-            type = "Audio"
-        media = await download_media_file(link, type)
+    query = message.text.split(None, 1)[1] if len(message.command) > 1 else None
 
-    # Updated error block
+    # Download media
+    if "https://" in query:
+        media_path = await download_media_file(query, "Audio")
+        type_ = "Audio"
+    else:
+        vidid, link = await get_media_info(None, query)
+        media_path = await download_media_file(link, "Audio")
+        type_ = "Audio"
+
+    # Join VC or add to queue
     try:
-        a = await call.get_call(chat_id)
-        if a.status == "not_playing":
-            stream = await get_media_stream(media, type)
+        call_obj = await call.get_call(chat_id)
+        if call_obj.status == "not_playing":
+            stream = await get_media_stream(media_path, type_)
             await call.change_stream(chat_id, stream)
-            await add_to_queue(chat_id, media=media, type=type)
-            return await aux.edit("**Streaming Started ....**")
-        elif a.status in ["playing", "paused"]:
-            position = await add_to_queue(chat_id, media=media, type=type)
-            return await aux.edit(f"**Added to Queue At {position}**")
+            await add_to_queue(chat_id, media=media_path, type=type_)
+            return await aux.edit("✅ Streaming Started ...")
+        else:
+            position = await add_to_queue(chat_id, media=media_path, type=type_)
+            return await aux.edit(f"✅ Added to Queue at position {position}")
     except Exception:
-        try:
-            stream = await get_media_stream(media, type)
-            await call.join_group_call(chat_id, stream, auto_start=False)
-            await add_to_queue(chat_id, media=media, type=type)
-            return await aux.edit("**Streaming Started ....**")
-        except Exception as e:
-            print(f"Error: {e}")
-            return await aux.edit("**Please Try Again !**")
+        stream = await get_media_stream(media_path, type_)
+        await call.join_group_call(chat_id, stream, auto_start=False)
+        await add_to_queue(chat_id, media=media_path, type=type_)
+        return await aux.edit("✅ Streaming Started ...")
