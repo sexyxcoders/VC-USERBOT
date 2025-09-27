@@ -6,5 +6,4 @@ aiohttp==3.9.3
 yt-dlp==2023.12.30
 youtube-search-python==1.6
 
-# Pull latest PyTgCalls dev branch from GitHub
--e git+https://github.com/pytgcalls/pytgcalls@dev#egg=pytgcalls
+git+https://github.com/pytgcalls/pytgcalls.git@dev
