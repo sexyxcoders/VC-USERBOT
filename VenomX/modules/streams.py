@@ -1,41 +1,31 @@
-import asyncio
-import os
-import yt_dlp
-import ssl
-import certifi
+import asyncio, re, yt_dlp
 from typing import Union
 from pyrogram.types import Audio, Voice, Video, VideoNote
-from pytgcalls.types import AudioQuality, VideoQuality
-from pytgcalls.types.stream import InputStream, AudioPiped, VideoPiped
 from youtubesearchpython.__future__ import VideosSearch
-from VenomX import config
-
-# Ensure root CA certificates are used (fix Heroku SSL issues)
-ssl._create_default_https_context = lambda: ssl.create_default_context(cafile=certifi.where())
-
-# Make sure downloads folder exists
-os.makedirs("downloads", exist_ok=True)
+from pytgcalls.types.input_stream import AudioPiped, VideoPiped
 
 
 def get_audio_name(audio: Union[Audio, Voice]):
     try:
-        ext = "ogg" if isinstance(audio, Voice) else audio.file_name.split(".")[-1]
-        file_name = f"{audio.file_unique_id}.{ext}"
+        file_name = (
+            audio.file_unique_id
+            + "."
+            + (audio.file_name.split(".")[-1] if not isinstance(audio, Voice) else "ogg")
+        )
     except:
-        file_name = f"{audio.file_unique_id}.ogg"
+        file_name = audio.file_unique_id + ".ogg"
     return file_name
 
 
 def get_video_name(video: Union[Video, VideoNote]):
     try:
-        ext = video.file_name.split(".")[-1]
-        file_name = f"{video.file_unique_id}.{ext}"
+        file_name = video.file_unique_id + "." + video.file_name.split(".")[-1]
     except:
-        file_name = f"{video.file_unique_id}.mp4"
+        file_name = video.file_unique_id + ".mp4"
     return file_name
 
 
-# Get Details Of Youtube Video
+# Get YouTube video details
 async def get_media_info(vidid: str, query: str):
     url = f"https://www.youtube.com/watch?v={vidid}" if vidid else None
     search = url if url else query
@@ -46,7 +36,7 @@ async def get_media_info(vidid: str, query: str):
     return [videoid, videourl]
 
 
-# Direct Link From YouTube
+# Direct stream link from YouTube
 async def get_stream_link(link: str):
     proc = await asyncio.create_subprocess_exec(
         "yt-dlp",
@@ -54,21 +44,21 @@ async def get_stream_link(link: str):
         "-f",
         "bestvideo+bestaudio/best",
         "--cookies", "cookies.txt",
-        link,
+        f"{link}",
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
     stdout, stderr = await proc.communicate()
-    urls = stdout.decode().split("\n")
-    return urls[0], urls[1]
+    links = stdout.decode().split("\n")
+    return links[0], links[1]
 
 
-# Stream Using PyTgCalls v3
+# Return PyTgCalls v3 compatible stream
 async def get_media_stream(media, type_: str):
     """
-    Returns the correct PyTgCalls InputStream for audio or video.
+    Returns AudioPiped or VideoPiped for PyTgCalls v3.
     """
     if type_ == "Audio":
-        return AudioPiped(media, audio_quality=AudioQuality.STANDARD)
+        return AudioPiped(media)
     elif type_ == "Video":
-        return VideoPiped(media, audio_quality=AudioQuality.STANDARD, video_quality=VideoQuality.Q720P)
+        return VideoPiped(media, audio=True)
