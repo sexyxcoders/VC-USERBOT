@@ -2,11 +2,11 @@
 pyrogram==2.0.106
 tgcrypto==1.2.4
 
-# Audio/Video streaming
-pytgcalls==2.1.0
+# Audio/Video streaming (PyTgCalls v3, PyPI-only)
+pytgcalls==3.0.0.dev6
 
 # YouTube downloader
-yt-dlp>=2025.9.5
+yt-dlp>=2024.12.26
 
 # Utilities
 aiohttp==3.8.5
