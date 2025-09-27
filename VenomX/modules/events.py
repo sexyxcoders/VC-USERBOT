@@ -1,7 +1,7 @@
 from typing import Union, List
 from pyrogram import filters
 from pyrogram.types import Message
-
+from pytgcalls import idle
 from VenomX import config
 from VenomX.modules import queues
 from VenomX.modules.clients import app, call
@@ -36,7 +36,6 @@ async def eor(message: Message, *args, **kwargs) -> Message:
     return await msg(*args, **kwargs)
 
 
-# Call-related decorators and event handlers
 async def call_decorators():
     # Handler to leave group call if queue is empty
     async def stream_services_handler(client, chat_id: int):
@@ -48,9 +47,8 @@ async def call_decorators():
         except Exception:
             return
 
-    # Stream end handler for PyTgCalls v2.2+
-    @call.on_stream_end()
-    async def stream_end_handler(_, update: StreamEnded):
+    # Stream end handler for PyTgCalls
+    async def stream_end_handler(update: StreamEnded):
         chat_id = update.chat_id
         await queues.task_done(chat_id)
         queue_empty = await queues.is_queue_empty(chat_id)
@@ -67,3 +65,6 @@ async def call_decorators():
             stream = await get_media_stream(media, type_)
             await call.change_stream(chat_id, stream)
             await app.send_message(chat_id, "Streaming ...")
+
+    # Attach handler to PyTgCalls client
+    call.on_stream_end(stream_end_handler)
