@@ -1,10 +1,12 @@
-yt-dlp==2023.12.30
+# Core dependencies
+pyrogram==2.0.106
+tgcrypto==1.2.5
+python-dotenv==1.0.0
 aiofiles==23.2.1
 aiohttp==3.9.3
-pyrogram==2.0.106
+yt-dlp==2023.12.30
+youtube-search-python==1.6
+
+# PyTgCalls stable release compatible with Pyrogram
 pytgcalls==2.1.0
-python-dotenv==1.0.0
-tgcrypto==1.2.5
-youtube-search-python==1.6.6
-httpx==0.27.0
-certifi
+tgcalls==2.0.0
