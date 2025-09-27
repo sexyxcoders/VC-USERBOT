@@ -7,7 +7,4 @@ yt-dlp==2023.12.30
 youtube-search-python==1.6
 
 pytgcalls==3.0.0.dev6
-tgcalls==3.0.0.dev6
-
-
-
+tgcalls==3.0.0.dev2
