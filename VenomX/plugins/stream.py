@@ -15,12 +15,11 @@ async def start_stream(client, message):
         return
     aux = await eor(message, "**🔄 Processing ...**")
     chat_id = message.chat.id
-    user_id = message.from_user.id
-    mention = message.from_user.mention
     replied = message.reply_to_message
     audiostream = ((replied.audio or replied.voice) if replied else None)
     videostream = ((replied.video or replied.document) if replied else None)
     command = str(message.command[0][0])
+
     if audiostream:
         media = await client.download_media(replied)
         type = "Audio"
@@ -33,42 +32,31 @@ async def start_stream(client, message):
                 "**🥀 Give Me Some Query To\nStream Audio Or Video❗...**"
             )
         query = message.text.split(None, 1)[1]
+        vidid = None
         if "https://" in query:
             base = r"(?:https?:)?(?:\/\/)?(?:www\.)?(?:youtu\.be\/|youtube(?:\-nocookie)?\.(?:[A-Za-z]{2,4}|[A-Za-z]{2,3}\.[A-Za-z]{2})\/)?(?:shorts\/|live\/)?(?:watch|embed\/|vi?\/)*(?:\?[\w=&]*vi?=)?([^#&\?\/]{11}).*$"
             resu = re.findall(base, query)
-            vidid = resu[0] if resu[0] else None
-        else:
-            vidid = None
+            vidid = resu[0] if resu else None
         results = await get_media_info(vidid, query)
         link = str(results[1])
-        if command == "v":
-            type = "Video"
-        else:
-            type = "Audio"
+        type = "Video" if command.startswith("v") else "Audio"
         media = await download_media_file(link, type)
-    
-    # ---------------- Fixed part for PyTgCalls v2 ----------------
+
+    stream = await get_media_stream(media, type)
+
+    # ---------------- PyTgCalls v2 safe handling ----------------
     try:
-        a = call.active_calls.get(chat_id)  # <-- v2 replacement
-        if a:
-            if a.status == "not_playing":
-                stream = await get_media_stream(media, type)
-                await call.change_stream(chat_id, stream)
-                await add_to_queue(chat_id, media=media, type=type)
-                return await aux.edit("**Streaming Started ....**")
-            elif a.status in ["playing", "paused"]:
-                position = await add_to_queue(chat_id, media=media, type=type)
-                return await aux.edit(f"**Added to Queue At {position}**")
-        else:
-            # No active call, join a new one
-            stream = await get_media_stream(media, type)
-            await call.join_group_call(chat_id, stream, auto_start=False)
-            await add_to_queue(chat_id, media=media, type=type)
-            return await aux.edit("**Streaming Started ....**")
-    except NoActiveGroupCall:
-        return await aux.edit("**No Active VC !**")
+        # Try to join or change stream; v2 raises exceptions if group call exists
+        await call.join_group_call(chat_id, stream, auto_start=True)
+        await add_to_queue(chat_id, media=media, type=type)
+        await aux.edit("**Streaming Started ....**")
     except AlreadyJoinedError:
-        return await aux.edit("**Assistant Already in VC !**")
+        # Already in VC → just change stream or add to queue
+        await call.change_stream(chat_id, stream)
+        position = await add_to_queue(chat_id, media=media, type=type)
+        await aux.edit(f"**Added to Queue At {position}**")
+    except NoActiveGroupCall:
+        await aux.edit("**No Active VC !**")
     except Exception as e:
         print(f"Error: {e}")
-        return await aux.edit("**Please Try Again !**")
+        await aux.edit("**Please Try Again !**")
